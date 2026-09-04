@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&family=Sacramento&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #fce3ec 0%, #ffe8e8 50%, #f7d6e0 100%);
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  .script-font { font-family: 'Dancing Script', cursive; }
+  .handwriting { font-family: 'Sacramento', cursive; }
+
+  .card-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 28px;
+    box-shadow: 0 20px 40px rgba(244, 114, 182, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    width: 100%;
+    max-width: 480px;
+    padding: 32px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #f43f5e 0%, #ec4899 100%);
+    color: white;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 9999px;
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .btn-primary:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 12px 24px rgba(236, 72, 153, 0.4); 
+  }
+
+  #puzzle-board {
+    aspect-ratio: 1 / 1;
+    touch-action: manipulation;
+  }
+
+  .tile { 
+    transition: transform 0.15s ease, border-color 0.15s ease; 
+    cursor: pointer; 
+    background-size: 300% 300% !important;
+    background-repeat: no-repeat !important;
+    aspect-ratio: 1 / 1;
+  }
+
+  .tile.selected { 
+    outline: 3px solid #ec4899; 
+    outline-offset: -3px; 
+  }
+
+  .flip-card { perspective: 1000px; width: 100%; height: 280px; cursor: pointer; }
+  .flip-card-inner {
+    position: relative; width: 100%; height: 100%; text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+  
+  .flip-front, .flip-back {
+    position: absolute; width: 100%; height: 100%;
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  }
+  .flip-back { transform: rotateY(180deg); background: #fff5f8; border: 2px solid #fbcfe8; }
+
+  .flame {
+    width: 10px; height: 16px; background: #f97316;
+    border-radius: 50% 50% 20% 20%;
+    animation: flicker 0.6s infinite alternate;
+    display: inline-block;
+  }
+
+  @keyframes flicker {
+    0% { transform: scale(1) rotate(-2deg); opacity: 0.9; }
+    100% { transform: scale(1.15) rotate(2deg); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card-container text-center">
+
+    <!-- SCREEN 1: COUNTDOWN -->
+    <div id="screen-1" class="screen active">
+      <div class="w-28 h-28 mx-auto mb-4 bg-pink-100 rounded-full flex items-center justify-center text-5xl shadow-inner">
+        🐱❤️
+      </div>
+      <p class="text-xs tracking-widest text-pink-400 font-semibold uppercase mb-1">Something Beautiful Is Waiting</p>
+      <h1 class="text-2xl text-gray-700 font-light mb-1">Just for you,</h1>
+      <h2 id="recipient-name-1" class="script-font text-4xl text-pink-500 mb-4">Pookie 🌸</h2>
+      <p class="text-xs text-gray-400 mb-6">Stay up a little longer — your surprise opens exactly at midnight 🌸</p>
+      
+  <div class="flex justify-center items-center gap-2 mb-6">
+    <!-- DAYS BOX -->
+    <div class="bg-pink-50 border border-pink-200 rounded-2xl p-2.5 w-16 text-center">
+      <span id="cd-days" class="script-font text-2xl text-pink-500 font-bold">00</span>
+      <p class="text-[9px] text-gray-400 uppercase tracking-wider mt-1">Days</p>
+    </div>
+    <div class="text-xl text-pink-300 script-font">:</div>
+
+    <!-- HOURS BOX -->
+    <div class="bg-pink-50 border border-pink-200 rounded-2xl p-2.5 w-16 text-center">
+      <span id="cd-hours" class="script-font text-2xl text-pink-500 font-bold">00</span>
+      <p class="text-[9px] text-gray-400 uppercase tracking-wider mt-1">Hours</p>
+    </div>
+    <div class="text-xl text-pink-300 script-font">:</div>
+
+    <!-- MINS BOX -->
+    <div class="bg-pink-50 border border-pink-200 rounded-2xl p-2.5 w-16 text-center">
+      <span id="cd-mins" class="script-font text-2xl text-pink-500 font-bold">00</span>
+      <p class="text-[9px] text-gray-400 uppercase tracking-wider mt-1">Mins</p>
+    </div>
+    <div class="text-xl text-pink-300 script-font">:</div>
+
+    <!-- SECS BOX -->
+    <div class="bg-pink-50 border border-pink-200 rounded-2xl p-2.5 w-16 text-center">
+      <span id="cd-secs" class="script-font text-2xl text-pink-500 font-bold">00</span>
+      <p class="text-[9px] text-gray-400 uppercase tracking-wider mt-1">Secs</p>
+    </div>
+  </div>
+
+      <button onclick="nextScreen(2)" class="text-xs text-pink-400 hover:text-pink-600 underline cursor-pointer">
+        ⚡ Early Access (Test / Preview)
+      </button>
+    </div>
+
+    <!-- SCREEN 2: GREETING & STATS -->
+    <div id="screen-2" class="screen">
+      <p class="text-xs text-pink-400 font-semibold tracking-widest uppercase mb-1">Today is Entirely Yours</p>
+      <h1 class="script-font text-4xl text-pink-500 mb-4">Happy Birthday, <br><span id="recipient-name-2">Pookie</span></h1>
+
+      <div class="bg-pink-50/60 rounded-2xl p-4 border border-pink-100 mb-6 text-left">
+        <p id="greeting-letter-text" class="text-xs leading-relaxed text-gray-600 font-light"></p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 mb-6">
+        <div class="bg-white border border-pink-100 rounded-xl p-2 shadow-sm">
+          <p class="script-font text-2xl text-pink-500 font-bold">21</p>
+          <p class="text-[9px] text-gray-400 uppercase font-semibold">Candles Today</p>
+        </div>
+        <div class="bg-white border border-pink-100 rounded-xl p-2 shadow-sm">
+          <p class="script-font text-2xl text-pink-500 font-bold">365</p>
+          <p class="text-[9px] text-gray-400 uppercase font-semibold">Days Together</p>
+        </div>
+        <div class="bg-white border border-pink-100 rounded-xl p-2 shadow-sm">
+          <p class="script-font text-2xl text-pink-500 font-bold">∞</p>
+          <p class="text-[9px] text-gray-400 uppercase font-semibold">Love for You</p>
+        </div>
+      </div>
+
+      <button onclick="nextScreen(3)" class="btn-primary w-full">Decorate Your Cake 🎂</button>
+    </div>
+
+    <!-- SCREEN 3: CAKE DECORATION -->
+    <div id="screen-3" class="screen">
+      <p class="text-[10px] tracking-widest text-pink-400 font-semibold uppercase mb-1">A Little Surprise For You</p>
+      <h2 class="script-font text-3xl text-pink-500 mb-2">Decorate Your Cake 🎂</h2>
+      <p id="cake-instruction" class="text-xs text-gray-400 mb-4">Click below to add balloons!</p>
+
+      <div class="h-64 flex items-end justify-center relative mb-6 overflow-visible">
+        <!-- Floating Balloons SVG -->
+        <div id="balloon-container" class="absolute inset-0 pointer-events-none opacity-0 transition-all duration-700">
+          <svg class="absolute -top-2 left-2 w-14 h-18" viewBox="0 0 50 70">
+            <ellipse cx="25" cy="25" rx="20" ry="24" fill="#ff6b81" />
+            <polygon points="25,49 21,55 29,55" fill="#e84118" />
+            <path d="M 25 55 Q 20 65 25 70" stroke="#dcdde1" stroke-width="2" fill="none" />
+            <ellipse cx="18" cy="15" rx="4" ry="7" fill="white" opacity="0.4" />
+          </svg>
+          <svg class="absolute top-12 left-10 w-12 h-16" viewBox="0 0 50 70">
+            <ellipse cx="25" cy="25" rx="20" ry="24" fill="#a55eea" />
+            <polygon points="25,49 21,55 29,55" fill="#8854d0" />
+            <path d="M 25 55 Q 30 65 25 70" stroke="#dcdde1" stroke-width="2" fill="none" />
+            <ellipse cx="18" cy="15" rx="4" ry="7" fill="white" opacity="0.4" />
+          </svg>
+          <svg class="absolute -top-2 right-2 w-14 h-18" viewBox="0 0 50 70">
+            <ellipse cx="25" cy="25" rx="20" ry="24" fill="#4bcffa" />
+            <polygon points="25,49 21,55 29,55" fill="#0fbcf9" />
+            <path d="M 25 55 Q 30 65 25 70" stroke="#dcdde1" stroke-width="2" fill="none" />
+            <ellipse cx="18" cy="15" rx="4" ry="7" fill="white" opacity="0.4" />
+          </svg>
+          <svg class="absolute top-12 right-10 w-12 h-16" viewBox="0 0 50 70">
+            <ellipse cx="25" cy="25" rx="20" ry="24" fill="#ffdd59" />
+            <polygon points="25,49 21,55 29,55" fill="#ffa801" />
+            <path d="M 25 55 Q 20 65 25 70" stroke="#dcdde1" stroke-width="2" fill="none" />
+            <ellipse cx="18" cy="15" rx="4" ry="7" fill="white" opacity="0.4" />
+          </svg>
+        </div>
+
+        <div class="w-48 flex flex-col items-center z-10">
+          <div id="cake-candles" class="flex justify-center gap-3 mb-1 opacity-0 transition-opacity duration-500">
+            <div class="flex flex-col items-center"><div class="flame opacity-0" id="flame-1"></div><div class="w-2 h-6 bg-pink-300 rounded-t"></div></div>
+            <div class="flex flex-col items-center"><div class="flame opacity-0" id="flame-2"></div><div class="w-2 h-6 bg-yellow-300 rounded-t"></div></div>
+            <div class="flex flex-col items-center"><div class="flame opacity-0" id="flame-3"></div><div class="w-2 h-6 bg-purple-300 rounded-t"></div></div>
+          </div>
+          <div id="cake-frosting" class="w-28 h-10 bg-pink-200 rounded-t-xl border-b-4 border-pink-300 flex items-center justify-center text-xs opacity-0 transition-opacity duration-500 shadow-sm">
+            🍓 🍓 🍓
+          </div>
+          <div class="w-40 h-16 bg-pink-100 rounded-t-2xl border-b-8 border-pink-200 flex items-center justify-center text-pink-400 script-font text-lg shadow-md">
+            Happy Birthday
+          </div>
+        </div>
+      </div>
+
+      <button id="cake-step-btn" onclick="advanceCakeStep()" class="btn-primary w-full">Add Balloons 🎈</button>
+    </div>
+
+    <!-- SCREEN 4: PUZZLE GAME -->
+    <div id="screen-4" class="screen">
+      <h2 class="script-font text-3xl text-pink-500 mb-1">Birthday Puzzle 🧩</h2>
+      <p class="text-xs text-gray-400 mb-3">Solve the puzzle to unlock your next surprise!</p>
+
+      <div class="flex justify-between items-center mb-3 px-4 text-xs text-gray-500">
+        <div>Moves: <span id="puzzle-moves" class="font-bold text-pink-500">0</span></div>
+        <button onclick="initPuzzle()" class="text-pink-400 underline">Shuffle Again</button>
+      </div>
+
+      <div id="puzzle-board" class="grid grid-cols-3 gap-1 w-64 h-64 mx-auto mb-4 border-2 border-pink-200 rounded-xl overflow-hidden p-1 bg-pink-50"></div>
+
+      <button id="puzzle-next-btn" onclick="nextScreen(5)" class="btn-primary w-full opacity-50 pointer-events-none">
+        Solve to Unlock Next Step ✨
+      </button>
+    </div>
+
+    <!-- SCREEN 5: MEMORY CARDS -->
+    <div id="screen-5" class="screen">
+      <h2 class="script-font text-3xl text-pink-500 mb-1">Our Memories Together 🌸</h2>
+      <p class="text-xs text-gray-400 mb-4">Tap to flip cards and read memories!</p>
+
+      <div id="card-slider" class="flip-card mb-4" onclick="flipCard()">
+        <div class="flip-card-inner">
+          <div class="flip-front bg-cover bg-center flex items-end p-3 text-white text-left" id="memory-img-front">
+            <div class="bg-black/40 backdrop-blur-sm p-2 rounded-lg w-full">
+              <span class="text-[10px] bg-pink-500 px-2 py-0.5 rounded-full uppercase tracking-wider" id="memory-date">20 September 2026</span>
+              <p class="text-xs font-semibold mt-1" id="memory-title">A Special Day</p>
+            </div>
+          </div>
+          <div class="flip-back p-6 flex flex-col justify-center items-center text-center">
+            <h3 class="script-font text-2xl text-pink-500 mb-2" id="memory-back-title">The Memorable Day</h3>
+            <p class="text-xs text-gray-600 font-light leading-relaxed" id="memory-back-text">
+              Every moment with you becomes my favorite memory.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center mb-6 px-2">
+        <button onclick="prevMemory()" class="text-xs text-pink-500 font-semibold">← Previous</button>
+        <span class="text-xs text-gray-400" id="memory-counter">1 / 3</span>
+        <button onclick="nextMemory()" class="text-xs text-pink-500 font-semibold">Next →</button>
+      </div>
+
+      <button onclick="nextScreen(6)" class="btn-primary w-full">Read Your Letter 💌</button>
+    </div>
+
+    <!-- SCREEN 6: MAIN LETTER -->
+    <div id="screen-6" class="screen">
+      <p class="text-[10px] tracking-widest text-pink-400 uppercase font-semibold mb-1">A Letter From The Heart</p>
+      <h2 class="script-font text-3xl text-pink-500 mb-3">Written Just for You 🌸</h2>
+
+      <div class="bg-[#fffdfa] border border-pink-200 rounded-2xl p-5 shadow-inner text-left mb-6 relative">
+        <span class="absolute top-3 right-4 text-xs text-pink-300 font-semibold">Your Birthday 💖</span>
+        <h3 class="script-font text-2xl text-pink-600 mb-2">My Dearest Pookie,</h3>
+        <p id="main-letter-body" class="text-sm md:text-base text-gray-700 leading-relaxed script-font font-medium"></p>
+      </div>
+
+      <button onclick="nextScreen(7)" class="btn-primary w-full">Family Wishes 💌</button>
+    </div>
+
+    <!-- SCREEN 7: FAMILY WISHES -->
+    <div id="screen-7" class="screen">
+      <h2 class="script-font text-3xl text-pink-500 mb-1">Wishes From Loved Ones 💖</h2>
+      <p class="text-xs text-gray-400 mb-4">Tap each card to open the message</p>
+
+      <div class="space-y-3 mb-6 text-left" id="family-wishes-container"></div>
+
+      <button onclick="nextScreen(8)" class="btn-primary w-full">Select Your Treat 🎁</button>
+    </div>
+
+    <!-- SCREEN 8: TREAT SELECTOR -->
+    <div id="screen-8" class="screen">
+      <h2 class="script-font text-3xl text-pink-500 mb-1">Pick Your Birthday Treat! 🍰</h2>
+      <p class="text-xs text-gray-400 mb-4">Choose where you want us to treat you!</p>
+
+      <div class="space-y-2 mb-6" id="treat-options-container"></div>
+
+      <button onclick="confirmTreat()" class="btn-primary w-full">Confirm Choice 💖</button>
+    </div>
+
+  </div>
+
+  <script>
+    const CONFIG = {
+      recipientName: "Rimu-shii~",
+      targetBirthdayDate: "2026-09-20T00:00:00",
+      greetingLetter: "My Pookie, of all the days in the year, this one is the most beautiful day because it's the day you arrived in the world. You make everything brighter, warmer, and so much more worth living. I love you more than words can express!",
+      puzzleImageUrl: "Images/Puzzle Image.png",
+      memories: [
+        {
+          date: "June 2026",
+          title: "The Unique Smile",
+          img: "Images/Image 01.jpg",
+          backTitle: "Caught Off Guard",
+          backText: "You weren't even trying to look cute here, which somehow made it ten times cuter."
+        },
+        {
+          date: "June 2026",
+          title: "Glimmer of Pure Joy",
+          img: "Images/Image 02.jpg",
+          backTitle: "Keep Shining Bright",
+          backText: "Look at that smile! Never forget how much light and energy you bring into every room you step into."
+        },
+        {
+          date: "August 2026",
+          title: "Main Character Energy",
+          img: "Images/Image 03.jpg",
+          backTitle: "Stealing the Spotlight",
+          backText: "From your outfit down to the tiny details—your sense of beauty and art makes the whole world feel prettier."
+        }
+      ],
+      mainLetter: `I have been trying to find the right words for a very long time. Not because I don't feel them. I feel them every single day. But because some feelings are simply too big for sentences.<br><br>It's just I don't know how to express, how deeply special you are to me.<br><br>Happy Birthday! 🌸`,
+      familyWishes: [
+        { title: "From Ammu 🌸🦋", text: "Wishing my darling daughter the happiest birthday! You bring so much pride and joy to our heart every single day. Keep shinning bright and reaching for all your big dreams." },
+        { title: "From Himu 🥀🍃", text: "Happy Birthday to my favourite Tyrant Sister! May you get a day off from bossing over me, but never lose that fierce love behind all your bossy ways!" },
+        { title: "From Rahi 💃💜", text: "Happy Birthday to the sister who runs my runs my life! Thank you for keeping me in line and loving me, even when you're giving me orders!" },
+        { title: "From Tanjim 🕺💙", text: "Happy Birthday! Stop annoying me so much, but seriously-Have the best day ever!" }
+      ],
+      treats: [
+        "1. Fancy Dinner Night",
+        "2. Ice-cream",
+        "3. Chips",
+        "4. Fuchka/ Belpuri",
+        "5. Pizza"
+      ]
+    };
+
+    let selectedTreatIndex = null;
+    let currentMemoryIdx = 0;
+
+    document.getElementById('recipient-name-1').innerText = CONFIG.recipientName;
+    document.getElementById('recipient-name-2').innerText = CONFIG.recipientName;
+    document.getElementById('greeting-letter-text').innerText = CONFIG.greetingLetter;
+    document.getElementById('main-letter-body').innerHTML = CONFIG.mainLetter;
+    updateCountdown();
+setInterval(updateCountdown, 1000);
+
+    function updateCountdown() {
+      const dateString = CONFIG.targetBirthdayDate.replace(/-/g, "/").replace("T", " ");
+      const target = new Date(dateString).getTime();
+      const now = new Date().getTime();
+      const diff = Math.max(0, target - now);
+
+      // Calculates Days, Hours, Minutes, and Seconds
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      // Sends the calculated numbers into the HTML boxes
+      if (document.getElementById('cd-days')) {
+        document.getElementById('cd-days').innerText = String(days).padStart(2, '0');
+      }
+      document.getElementById('cd-hours').innerText = String(hours).padStart(2, '0');
+      document.getElementById('cd-mins').innerText = String(mins).padStart(2, '0');
+      document.getElementById('cd-secs').innerText = String(secs).padStart(2, '0');
+    }
+
+    function nextScreen(screenNum) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(`screen-${screenNum}`).classList.add('active');
+
+      if (screenNum === 4) initPuzzle();
+      if (screenNum === 5) loadMemory(0);
+      if (screenNum === 7) renderFamilyWishes();
+      if (screenNum === 8) renderTreats();
+    }
+
+    let cakeStep = 0;
+    function advanceCakeStep() {
+      const btn = document.getElementById('cake-step-btn');
+      const instruction = document.getElementById('cake-instruction');
+
+      if (cakeStep === 0) {
+        document.getElementById('balloon-container').classList.remove('opacity-0');
+        instruction.innerText = "Now add some delicious frosting!";
+        btn.innerText = "Add Frosting 🧁";
+        cakeStep++;
+      } else if (cakeStep === 1) {
+        document.getElementById('cake-frosting').classList.remove('opacity-0');
+        instruction.innerText = "Ready? Light those candles!";
+        btn.innerText = "Light The Candles 🕯️";
+        cakeStep++;
+      } else if (cakeStep === 2) {
+        document.getElementById('cake-candles').classList.remove('opacity-0');
+        document.getElementById('flame-1').classList.remove('opacity-0');
+        document.getElementById('flame-2').classList.remove('opacity-0');
+        document.getElementById('flame-3').classList.remove('opacity-0');
+        instruction.innerText = "One last touch... make it magical! ✨";
+        btn.innerText = "Celebrate! 🎉";
+        cakeStep++;
+      } else if (cakeStep === 3) {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        btn.innerText = "It's Perfect! Next ➔";
+        btn.onclick = () => nextScreen(4);
+      }
+    }
+
+    let tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    let selectedTileIdx = null;
+    let moves = 0;
+
+    function initPuzzle() {
+      moves = 0;
+      document.getElementById('puzzle-moves').innerText = moves;
+      tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
+      renderPuzzle();
+    }
+
+    function renderPuzzle() {
+      const board = document.getElementById('puzzle-board');
+      board.innerHTML = '';
+      tiles.forEach((tileValue, index) => {
+        const div = document.createElement('div');
+        div.className = `tile w-full h-full bg-cover rounded border border-white ${selectedTileIdx === index ? 'selected' : ''}`;
+        const row = Math.floor(tileValue / 3);
+        const col = tileValue % 3;
+        div.style.backgroundImage = `url('${CONFIG.puzzleImageUrl}')`;
+        div.style.backgroundSize = '300% 300%';
+        div.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
+        div.onclick = () => handleTileClick(index);
+        board.appendChild(div);
+      });
+    }
+
+    function handleTileClick(index) {
+      if (selectedTileIdx === null) {
+        selectedTileIdx = index;
+      } else {
+        [tiles[selectedTileIdx], tiles[index]] = [tiles[index], tiles[selectedTileIdx]];
+        selectedTileIdx = null;
+        moves++;
+        document.getElementById('puzzle-moves').innerText = moves;
+        checkPuzzleSolved();
+      }
+      renderPuzzle();
+    }
+
+    function checkPuzzleSolved() {
+      if (tiles.every((val, idx) => val === idx)) {
+        confetti({ particleCount: 80, spread: 60 });
+        const btn = document.getElementById('puzzle-next-btn');
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        btn.innerText = "Puzzle Solved! Continue ➔";
+      }
+    }
+
+    function loadMemory(idx) {
+      currentMemoryIdx = idx;
+      const mem = CONFIG.memories[idx];
+      document.getElementById('memory-img-front').style.backgroundImage = `url('${mem.img}')`;
+      document.getElementById('memory-date').innerText = mem.date;
+      document.getElementById('memory-title').innerText = mem.title;
+      document.getElementById('memory-back-title').innerText = mem.backTitle;
+      document.getElementById('memory-back-text').innerText = mem.backText;
+      document.getElementById('memory-counter').innerText = `${idx + 1} / ${CONFIG.memories.length}`;
+      document.getElementById('card-slider').classList.remove('flipped');
+    }
+
+    function flipCard() {
+      document.getElementById('card-slider').classList.toggle('flipped');
+    }
+
+    function nextMemory() {
+      if (currentMemoryIdx < CONFIG.memories.length - 1) loadMemory(currentMemoryIdx + 1);
+    }
+
+    function prevMemory() {
+      if (currentMemoryIdx > 0) loadMemory(currentMemoryIdx - 1);
+    }
+
+    function renderFamilyWishes() {
+      const container = document.getElementById('family-wishes-container');
+      container.innerHTML = '';
+      CONFIG.familyWishes.forEach((wish, idx) => {
+        const item = document.createElement('div');
+        item.className = 'border border-pink-200 rounded-xl overflow-hidden bg-white/80 shadow-sm';
+        item.innerHTML = `
+          <button onclick="toggleWish(${idx})" class="w-full p-3.5 flex justify-between items-center text-xs font-semibold text-pink-600 bg-pink-50/50">
+            <span>${wish.title}</span>
+            <span id="arrow-${idx}">▼</span>
+          </button>
+          <div id="wish-body-${idx}" class="hidden p-3.5 text-xs text-gray-600 leading-relaxed border-t border-pink-100 bg-white">
+            ${wish.text}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function toggleWish(idx) {
+      const body = document.getElementById(`wish-body-${idx}`);
+      const arrow = document.getElementById(`arrow-${idx}`);
+      const isHidden = body.classList.contains('hidden');
+      
+      document.querySelectorAll('[id^="wish-body-"]').forEach(b => b.classList.add('hidden'));
+      document.querySelectorAll('[id^="arrow-"]').forEach(a => a.innerText = '▼');
+
+      if (isHidden) {
+        body.classList.remove('hidden');
+        arrow.innerText = '▲';
+      }
+    }
+
+    function renderTreats() {
+      const container = document.getElementById('treat-options-container');
+      container.innerHTML = '';
+      CONFIG.treats.forEach((treat, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `w-full p-3 rounded-xl border text-left text-xs font-medium transition-all ${selectedTreatIndex === idx ? 'border-pink-500 bg-pink-100/60 text-pink-600 shadow-sm' : 'border-gray-200 bg-white/70 text-gray-700'}`;
+        btn.innerText = treat;
+        btn.onclick = () => {
+          selectedTreatIndex = idx;
+          renderTreats();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function confirmTreat() {
+      if (selectedTreatIndex === null) {
+        alert("Please select a treat option first! 🍰");
+        return;
+      }
+      confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } });
+      alert(`Yay! Choice confirmed: "${CONFIG.treats[selectedTreatIndex]}". Can't wait to celebrate with you! ❤️`);
+    }
+  </script>
+</body>
+</html>
